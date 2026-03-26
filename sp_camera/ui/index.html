@@ -72,7 +72,7 @@
             </div>
             <!-- 對焦環（點擊觀景窗時出現） -->
             <div id="focus-ring" class="focus-ring" aria-hidden="true"></div>
-            <!-- 觀景窗內容 -->
+            <!-- 觀景窗待機畫面（未進入相機模式時顯示） -->
             <div id="vf-idle" class="vf-idle">
                 <div class="vf-camera-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -80,9 +80,40 @@
                         <circle cx="12" cy="13" r="4"/>
                     </svg>
                 </div>
-                <p class="vf-hint">按下快門鍵拍攝</p>
+                <p class="vf-hint">按下快門進入相機模式</p>
                 <p class="vf-sub-hint" id="vf-provider-hint">截圖後將上傳至相簿</p>
             </div>
+
+            <!-- Live 模式：控制說明（進入相機模式後顯示） -->
+            <div id="vf-live-hint" class="vf-live-hint hidden">
+                <div class="live-keys">
+                    <span class="live-key-item"><kbd>E</kbd> 拍照</span>
+                    <span class="live-key-sep">·</span>
+                    <span class="live-key-item">滾輪 縮放</span>
+                    <span class="live-key-sep">·</span>
+                    <span class="live-key-item"><kbd>⌫</kbd> 退出</span>
+                </div>
+            </div>
+
+            <!-- Live 模式：左上角 LIVE 標示 -->
+            <div id="vf-live-badge" class="vf-live-badge hidden">
+                <span class="live-dot"></span>LIVE
+            </div>
+
+            <!-- Live 模式：上傳中提示（截圖後顯示） -->
+            <div id="vf-uploading" class="vf-uploading hidden">
+                <div class="vf-upload-spinner"></div>
+                <span>上傳中…</span>
+            </div>
+
+            <!-- Live 模式：拍攝成功提示 -->
+            <div id="vf-shot-badge" class="vf-shot-badge hidden">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                已儲存
+            </div>
+
             <!-- 縮放指示標 -->
             <div id="zoom-badge" class="zoom-badge">1.0×</div>
         </div>
@@ -100,7 +131,7 @@
         </div>
 
         <!-- 底部操作列 -->
-        <div class="bottombar bottombar--camera">
+        <div id="bottombar-camera" class="bottombar bottombar--camera">
             <!-- 左：最後一張縮圖 / 相簿入口 -->
             <button id="btn-last-thumb" class="thumb-btn" title="查看最後一張">
                 <div id="thumb-placeholder" class="thumb-placeholder">

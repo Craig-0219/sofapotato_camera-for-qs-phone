@@ -51,6 +51,7 @@ const State = {
     resultOpen:     false,
     settingsOpen:   false,
     isCapturing:    false,
+    isLive:         false,      // 相機 Live 模式（角色可移動 + 鼠標視角）
     capturedUrl:    null,       // 截圖後待儲存的 URL
     sessionPhotos:  [],         // { url }
     config: {
@@ -74,6 +75,12 @@ const Dom = {
     // Camera view
     vfIdle:             $('vf-idle'),
     vfProviderHint:     $('vf-provider-hint'),
+    vfLiveHint:         $('vf-live-hint'),
+    vfLiveBadge:        $('vf-live-badge'),
+    vfUploading:        $('vf-uploading'),
+    vfShotBadge:        $('vf-shot-badge'),
+    viewfinder:         document.getElementById('viewfinder'),
+    bottombarCamera:    $('bottombar-camera'),
     zoomBadge:          $('zoom-badge'),
     zoomSlider:         $('zoom-slider'),
     btnFlash:           $('btn-flash'),
@@ -82,6 +89,7 @@ const Dom = {
     btnCloseCamera:     $('btn-close-camera'),
     btnShutter:         $('btn-shutter'),
     shutterCore:        $('shutter-core'),
+    shutterRing:        document.querySelector('.shutter-ring'),
     btnLastThumb:       $('btn-last-thumb'),
     lastThumbImg:       $('last-thumb-img'),
     thumbPlaceholder:   $('thumb-placeholder'),
@@ -378,46 +386,113 @@ async function savePhoto(url) {
 }
 
 // ═══════════════════════════════════════════════════════
-//  快門觸發（截圖模式）
+//  進入 Live 相機模式
+//  → 通知 Lua SetNuiFocus(false,false)
+//  → Lua 開始監聽 E / Backspace / 滾輪
+//  → NUI 切換到透明觀景窗 + 控制提示
+// ═══════════════════════════════════════════════════════
+async function enterLiveCameraMode() {
+    if (State.isLive) return;
+
+    const ack = await nuiFetch('enterCameraMode', {});
+    if (!ack && !window.__isFiveM) {
+        // Browser 測試：模擬進入 live 模式
+        handleCameraModeChange({ active: true, zoomLabel: '1.0×' });
+        toast('info', 'Browser 測試模式：模擬 Live 相機', 3000);
+    }
+    // 實際的 UI 切換由 Lua SendNUIMessage({ action: 'cameraMode', active: true }) 觸發
+}
+
+// ═══════════════════════════════════════════════════════
+//  切換 Live 模式 UI 狀態
+// ═══════════════════════════════════════════════════════
+function handleCameraModeChange(data) {
+    State.isLive = data.active;
+
+    if (data.active) {
+        // ── 進入 Live 模式 ──
+        // 觀景窗透明 → 遊戲畫面就是觀景窗
+        Dom.viewfinder.classList.add('is-live');
+        Dom.bottombarCamera && Dom.bottombarCamera.classList.add('is-live');
+        Dom.shutterRing     && Dom.shutterRing.classList.add('is-live');
+
+        // 顯示 LIVE 標示 + 控制提示，隱藏待機畫面
+        Dom.vfIdle.classList.add('hidden');
+        Dom.vfLiveBadge.classList.remove('hidden');
+        Dom.vfLiveHint.classList.remove('hidden');
+
+        // 更新縮放顯示
+        if (data.zoomLabel) Dom.zoomBadge.textContent = data.zoomLabel;
+
+        // 快門變紅（代表 Live / 錄影模式感）
+        Dom.btnShutter.classList.add('is-live');
+
+        // 頂部按鈕在 Live 模式下仍可見但不可互動（NUI 無焦點）
+        toast('info', '已進入相機模式 · E 拍照 · ⌫ 退出', 4000);
+
+    } else {
+        // ── 退出 Live 模式 ──
+        Dom.viewfinder.classList.remove('is-live');
+        Dom.bottombarCamera && Dom.bottombarCamera.classList.remove('is-live');
+        Dom.shutterRing     && Dom.shutterRing.classList.remove('is-live');
+
+        Dom.vfIdle.classList.remove('hidden');
+        Dom.vfLiveBadge.classList.add('hidden');
+        Dom.vfLiveHint.classList.add('hidden');
+        Dom.vfUploading.classList.add('hidden');
+        Dom.vfShotBadge.classList.add('hidden');
+
+        Dom.btnShutter.classList.remove('is-live');
+        Dom.btnShutter.disabled = false;
+        State.isCapturing = false;
+
+        // 縮放重設
+        Dom.zoomBadge.textContent = '1.0×';
+        Dom.zoomSlider.value = 1;
+    }
+}
+
+// ═══════════════════════════════════════════════════════
+//  快門觸發（從 UI 按鈕按下 → 進入 Live 模式）
+//  Live 模式中的實際拍照由 Lua 的 E 鍵處理
 // ═══════════════════════════════════════════════════════
 async function triggerShutter() {
-    if (State.isCapturing) return;
-    State.isCapturing = true;
-
-    Dom.btnShutter.disabled = true;
-    Dom.btnShutter.classList.add('capturing');
-
-    // 播放閃光
-    await triggerFlash();
-
-    toast('info', '截圖中，上傳後自動儲存…', 8000);
-
-    // 送出截圖請求給 Lua
-    const ack = await nuiFetch('takePhoto', {});
-
-    if (!ack) {
-        // Browser 測試模式
-        State.isCapturing = false;
-        Dom.btnShutter.disabled = false;
-        Dom.btnShutter.classList.remove('capturing');
-        toast('warning', '非 FiveM 環境，截圖功能不可用');
+    if (State.isLive) {
+        // Live 模式中快門按鈕沒有 NUI 焦點，不會觸發
+        // 實際由 Lua 監聽 E 鍵
+        return;
     }
 
-    // 結果由 SendNUIMessage captureResult 處理（非同步）
+    if (State.isCapturing) return;
+
+    // 尚未進入 Live 模式 → 進入相機模式
+    await enterLiveCameraMode();
 }
 
 // ═══════════════════════════════════════════════════════
 //  處理 Lua 送來的 captureResult
+//  Live 模式和一般模式共用
 // ═══════════════════════════════════════════════════════
 function handleCaptureResult(data) {
     State.isCapturing = false;
     Dom.btnShutter.disabled = false;
     Dom.btnShutter.classList.remove('capturing');
 
+    // 隱藏上傳中提示
+    Dom.vfUploading.classList.add('hidden');
+
     if (data.success && data.url) {
-        // 顯示結果 overlay
-        showResult(data.url);
         addSessionPhoto(data.url);
+
+        if (State.isLive) {
+            // ── Live 模式：在觀景窗上方顯示成功提示（不離開相機模式）
+            Dom.vfShotBadge.classList.remove('hidden');
+            setTimeout(() => Dom.vfShotBadge.classList.add('hidden'), 2500);
+            toast('success', '已儲存至相簿 ✓', 2500);
+        } else {
+            // ── 一般模式：顯示 Result overlay
+            showResult(data.url);
+        }
 
         // Debug payload
         if (data.payload) {
@@ -426,7 +501,12 @@ function handleCaptureResult(data) {
         }
     } else {
         const err = data.error || '截圖/上傳失敗';
-        toast('error', err, 5000);
+
+        if (State.isLive) {
+            toast('error', err, 5000);
+        } else {
+            toast('error', err, 5000);
+        }
         console.error('[sp_camera] captureResult 失敗:', err);
     }
 }
@@ -627,6 +707,28 @@ window.addEventListener('message', e => {
             handleCaptureResult(data);
             break;
 
+        // ── Live 相機模式切換 ──
+        // Lua EnterCameraMode() / ExitCameraMode() 後觸發
+        case 'cameraMode':
+            handleCameraModeChange(data);
+            break;
+
+        // ── 縮放更新（滾輪縮放時 Lua 觸發） ──
+        case 'updateZoom':
+            if (data.zoomLabel) {
+                Dom.zoomBadge.textContent = data.zoomLabel;
+                Dom.zoomSlider.value = parseFloat(data.zoomLabel) || 1;
+            }
+            break;
+
+        // ── 閃光動畫（Live 模式中 Lua 拍照時觸發） ──
+        case 'captureFlash':
+            triggerFlash();
+            // 顯示上傳中提示
+            Dom.vfUploading.classList.remove('hidden');
+            Dom.vfShotBadge.classList.add('hidden');
+            break;
+
         // Lua 要求重設 UI（例如 closeApp 後）
         case 'resetUI':
             resetAppUI();
@@ -661,6 +763,12 @@ async function init() {
 }
 
 function resetAppUI() {
+    // 若在 Live 模式中，先退出（通知 Lua）
+    if (State.isLive) {
+        nuiFetch('exitCameraMode', {});
+        handleCameraModeChange({ active: false });
+    }
+
     // 回到相機 view
     setView('camera');
     hideResult();

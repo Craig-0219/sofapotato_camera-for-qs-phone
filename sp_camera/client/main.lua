@@ -144,9 +144,31 @@ RegisterNUICallback('savePhoto', function(data, cb)
 end)
 
 -- ──────────────────────────────────────────────
+--  NUI 回呼：進入相機模式
+--  按下「進入相機模式」按鈕時觸發
+--  → SetNuiFocus(false,false)，角色可移動 + 鼠標控制視角
+-- ──────────────────────────────────────────────
+RegisterNUICallback('enterCameraMode', function(data, cb)
+    cb({ acknowledged = true })  -- 立即回應，避免 NUI 等待
+    EnterCameraMode()
+end)
+
+-- ──────────────────────────────────────────────
+--  NUI 回呼：退出相機模式（從 NUI 按鈕觸發）
+--  通常由 Backspace 鍵在 Lua 迴圈中觸發
+--  此 callback 作為額外出口（例如 NUI 按鈕）
+-- ──────────────────────────────────────────────
+RegisterNUICallback('exitCameraMode', function(data, cb)
+    cb({ acknowledged = true })
+    ExitCameraMode()
+end)
+
+-- ──────────────────────────────────────────────
 --  NUI 回呼：關閉 App
 -- ──────────────────────────────────────────────
 RegisterNUICallback('closeApp', function(data, cb)
+    -- 若在相機模式中關閉，先退出相機模式
+    ExitCameraMode()
     SetNuiFocus(false, false)
     cb({ success = true })
 end)

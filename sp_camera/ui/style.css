@@ -345,6 +345,187 @@ input, select, textarea {
     z-index: 3;
     pointer-events: none;
     backdrop-filter: blur(4px);
+    transition: opacity 0.3s;
+}
+
+/* ══════════════════════════════════════════════
+   Live 相機模式（is-live 狀態）
+   SetNuiFocus(false,false) 後角色可移動 + 鼠標控制視角
+   觀景窗透明 → 遊戲畫面直接當作觀景窗
+   注意：透明效果是否完全顯示遊戲世界，
+         取決於 qs-smartphone-pro 的手機 NUI 渲染方式
+══════════════════════════════════════════════ */
+
+/* Live 模式：觀景窗透明化 */
+.viewfinder.is-live {
+    background: transparent;
+    cursor: default;
+}
+
+/* Live 模式：構圖線更明顯 */
+.viewfinder.is-live .vf-line {
+    background: rgba(255,255,255,0.22);
+}
+
+/* Live 模式：四角邊框標示（相機感） */
+.viewfinder.is-live::before,
+.viewfinder.is-live::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    z-index: 4;
+    pointer-events: none;
+}
+
+/* 底部操作列 Live 模式 */
+.bottombar--camera.is-live {
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(6px);
+}
+
+/* ── LIVE 標示（左上角） ── */
+.vf-live-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(0,0,0,0.55);
+    color: rgba(255,255,255,0.9);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    z-index: 6;
+    pointer-events: none;
+    backdrop-filter: blur(4px);
+}
+
+.live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #ef4444;
+    animation: livePulse 1.2s ease-in-out infinite;
+    flex-shrink: 0;
+}
+
+@keyframes livePulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.5; transform: scale(0.85); }
+}
+
+/* ── 控制說明（底部中央） ── */
+.vf-live-hint {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 6;
+    pointer-events: none;
+    animation: fadeIn 0.4s ease;
+}
+
+.live-keys {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(6px);
+    padding: 5px 12px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+.live-key-item {
+    font-size: 10px;
+    color: rgba(255,255,255,0.85);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.live-key-sep {
+    color: rgba(255,255,255,0.35);
+    font-size: 10px;
+}
+
+kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 5px;
+    min-width: 18px;
+    color: #fff;
+    letter-spacing: 0;
+}
+
+/* ── 上傳中提示 ── */
+.vf-uploading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(8px);
+    border-radius: var(--radius-md);
+    padding: 14px 20px;
+    color: rgba(255,255,255,0.85);
+    font-size: 12px;
+    font-weight: 500;
+    z-index: 8;
+    pointer-events: none;
+}
+
+.vf-upload-spinner {
+    width: 24px;
+    height: 24px;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-top-color: rgba(255,255,255,0.8);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+/* ── 拍攝成功提示 ── */
+.vf-shot-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(74,222,128,0.88);
+    color: #000;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    z-index: 7;
+    pointer-events: none;
+    animation: popIn 0.3s var(--ease);
+}
+
+/* Live 模式下快門按鈕樣式 */
+.shutter-ring.is-live {
+    border-color: rgba(239,68,68,0.85);
+}
+
+.shutter-btn.is-live .shutter-core {
+    background: #ef4444;
 }
 
 /* ══════════════════════════════════════════════
