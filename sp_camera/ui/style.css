@@ -1,0 +1,364 @@
+/* ============================================================
+   sp_camera / ui/style.css
+   手機 App 樣式 — 暗色相機風格
+   配合 qs-smartphone-pro 的 themes.css 變數系統
+   ============================================================ */
+
+/* ── Google Fonts 替代方案（離線環境下也能顯示）── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* ── CSS 變數（對齊官方 template 的 themes.css 命名） ── */
+:root {
+    --main-background-color: #0d0d0d;
+    --dark-background-color: #1a1a1a;
+    --surface-color:         #242424;
+    --border-color:          #333333;
+    --text-color:            #f0f0f0;
+    --text-muted:            #888888;
+    --accent-color:          #4a9eff;
+    --accent-hover:          #6ab4ff;
+    --success-color:         #4caf50;
+    --error-color:           #f44336;
+    --warning-color:         #ff9800;
+    --btn-radius:            10px;
+    --transition:            0.2s ease;
+}
+
+/* 若手機注入 data-theme="light"，切換為亮色模式 */
+[data-theme="light"] {
+    --main-background-color: #f5f5f5;
+    --dark-background-color: #e8e8e8;
+    --surface-color:         #ffffff;
+    --border-color:          #dddddd;
+    --text-color:            #1a1a1a;
+    --text-muted:            #666666;
+}
+
+/* ── Reset ── */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 14px;
+    background: transparent;
+    color: var(--text-color);
+}
+
+/* ── App 主容器 ── */
+.app-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    background: var(--main-background-color);
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.app-container::-webkit-scrollbar {
+    display: none;
+}
+
+/* ── 頂部列 ── */
+.top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px 10px;
+    background: var(--dark-background-color);
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.app-title {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    color: var(--text-color);
+}
+
+.btn-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 6px;
+    transition: background var(--transition), color var(--transition);
+    line-height: 1;
+}
+
+.btn-close:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-color);
+}
+
+/* ── 預覽區 ── */
+.preview-section {
+    padding: 12px 14px 8px;
+    flex-shrink: 0;
+}
+
+.preview-box {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.preview-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-muted);
+}
+
+.preview-icon {
+    font-size: 28px;
+    opacity: 0.5;
+}
+
+.preview-hint {
+    font-size: 11px;
+    opacity: 0.7;
+}
+
+.preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 11px;
+}
+
+/* ── 輸入區 ── */
+.input-section {
+    padding: 8px 14px;
+    flex-shrink: 0;
+}
+
+.input-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 6px;
+}
+
+.input-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.url-input {
+    flex: 1;
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--btn-radius);
+    color: var(--text-color);
+    font-family: inherit;
+    font-size: 12px;
+    padding: 9px 12px;
+    outline: none;
+    transition: border-color var(--transition);
+}
+
+.url-input::placeholder {
+    color: var(--text-muted);
+    opacity: 0.6;
+}
+
+.url-input:focus {
+    border-color: var(--accent-color);
+}
+
+.btn-preview {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--btn-radius);
+    color: var(--text-color);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 8px 10px;
+    transition: background var(--transition), border-color var(--transition);
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.btn-preview:hover {
+    background: rgba(74, 158, 255, 0.12);
+    border-color: var(--accent-color);
+}
+
+/* ── 操作按鈕區 ── */
+.action-section {
+    padding: 6px 14px 8px;
+    flex-shrink: 0;
+}
+
+.btn-save {
+    width: 100%;
+    background: var(--accent-color);
+    color: #ffffff;
+    border: none;
+    border-radius: var(--btn-radius);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 11px;
+    cursor: pointer;
+    transition: background var(--transition), transform var(--transition);
+    letter-spacing: 0.2px;
+}
+
+.btn-save:hover {
+    background: var(--accent-hover);
+}
+
+.btn-save:active {
+    transform: scale(0.98);
+}
+
+.btn-save:disabled {
+    background: #444444;
+    color: #888888;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ── 狀態區 ── */
+.status-box {
+    margin: 4px 14px 6px;
+    padding: 9px 12px;
+    border-radius: var(--btn-radius);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    flex-shrink: 0;
+    animation: fadeIn 0.3s ease;
+}
+
+.status-box.success {
+    background: rgba(76, 175, 80, 0.15);
+    border: 1px solid rgba(76, 175, 80, 0.4);
+    color: var(--success-color);
+}
+
+.status-box.error {
+    background: rgba(244, 67, 54, 0.15);
+    border: 1px solid rgba(244, 67, 54, 0.4);
+    color: var(--error-color);
+}
+
+.status-box.loading {
+    background: rgba(74, 158, 255, 0.1);
+    border: 1px solid rgba(74, 158, 255, 0.3);
+    color: var(--accent-color);
+}
+
+.status-icon {
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.status-text {
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+/* ── Debug / Payload 預覽區 ── */
+.debug-section {
+    padding: 4px 14px 14px;
+    flex-shrink: 0;
+}
+
+.btn-toggle-debug {
+    background: none;
+    border: 1px solid var(--border-color);
+    border-radius: var(--btn-radius);
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    padding: 6px 10px;
+    transition: background var(--transition), color var(--transition);
+    width: 100%;
+    text-align: left;
+}
+
+.btn-toggle-debug:hover {
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-color);
+}
+
+.debug-panel {
+    margin-top: 8px;
+    background: var(--dark-background-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--btn-radius);
+    padding: 10px;
+    animation: fadeIn 0.2s ease;
+}
+
+.debug-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 6px;
+}
+
+.debug-payload {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 10px;
+    color: #a8d8a8;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 140px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+}
+
+.debug-note {
+    margin-top: 8px;
+    font-size: 10px;
+    color: var(--warning-color);
+    line-height: 1.4;
+    padding: 6px;
+    background: rgba(255, 152, 0, 0.08);
+    border-radius: 6px;
+    border-left: 2px solid var(--warning-color);
+}
+
+/* ── 通用 ── */
+.hidden {
+    display: none !important;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sp_camera</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- qs-smartphone-pro 會把這個頁面載入為 iframe，嵌入手機畫面 -->
+
+    <div id="app" class="app-container">
+
+        <!-- ── 頂部列 ────────────────────────────── -->
+        <div class="top-bar">
+            <span class="app-title">📷 Camera</span>
+            <button id="btn-close" class="btn-close" title="關閉">✕</button>
+        </div>
+
+        <!-- ── 預覽區 ────────────────────────────── -->
+        <div class="preview-section">
+            <div id="preview-box" class="preview-box">
+                <div id="preview-placeholder" class="preview-placeholder">
+                    <span class="preview-icon">🖼️</span>
+                    <span class="preview-hint">輸入圖片 URL 後預覽</span>
+                </div>
+                <img id="preview-img" class="preview-img hidden" alt="預覽圖片">
+            </div>
+        </div>
+
+        <!-- ── 輸入區 ────────────────────────────── -->
+        <div class="input-section">
+            <label class="input-label">圖片 URL</label>
+            <div class="input-row">
+                <input
+                    id="url-input"
+                    class="url-input"
+                    type="text"
+                    placeholder="https://i.imgur.com/xxxxxxx.jpg"
+                    autocomplete="off"
+                    spellcheck="false"
+                >
+                <button id="btn-preview" class="btn-preview" title="預覽">👁</button>
+            </div>
+        </div>
+
+        <!-- ── 操作按鈕 ────────────────────────────── -->
+        <div class="action-section">
+            <button id="btn-save" class="btn-save">
+                💾 儲存至手機相簿
+            </button>
+        </div>
+
+        <!-- ── 狀態區 ────────────────────────────── -->
+        <div id="status-box" class="status-box hidden">
+            <span id="status-icon" class="status-icon"></span>
+            <span id="status-text" class="status-text"></span>
+        </div>
+
+        <!-- ── Payload 預覽（debug 用） ────────────── -->
+        <div class="debug-section">
+            <button id="btn-toggle-debug" class="btn-toggle-debug">
+                🔍 顯示 Payload
+            </button>
+            <div id="debug-panel" class="debug-panel hidden">
+                <div class="debug-label">最後一次發送的 Payload：</div>
+                <pre id="debug-payload" class="debug-payload">（尚未發送）</pre>
+                <div class="debug-note">
+                    ⚠ 以上欄位為推測格式，需以 qs-smartphone-pro
+                    savePhoto handler 原始碼校正
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /#app -->
+
+    <script src="app.js"></script>
+</body>
+</html>
