@@ -529,6 +529,63 @@ kbd {
 }
 
 /* ══════════════════════════════════════════════
+   自拍模式（Selfie Mode）
+   自拍相機：CreateCam 在角色前方 → 對準頭部骨骼
+   觀景窗水平翻轉（鏡像），讓自拍感覺自然
+══════════════════════════════════════════════ */
+
+/* 觀景窗鏡像翻轉（自拍時符合真實手機鏡像顯示） */
+.viewfinder.is-selfie {
+    transform: scaleX(-1);
+}
+
+/* 翻轉後子元素恢復正向（文字 / 標示不要反轉） */
+.viewfinder.is-selfie .vf-live-badge,
+.viewfinder.is-selfie .vf-selfie-badge,
+.viewfinder.is-selfie .vf-live-hint,
+.viewfinder.is-selfie .zoom-badge,
+.viewfinder.is-selfie .vf-uploading,
+.viewfinder.is-selfie .vf-shot-badge,
+.viewfinder.is-selfie .focus-ring {
+    transform: scaleX(-1);
+}
+
+/* SELFIE 標示（右上角，紫色） */
+.vf-selfie-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(139, 92, 246, 0.78);
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    z-index: 6;
+    pointer-events: none;
+    backdrop-filter: blur(4px);
+    animation: popIn 0.25s var(--ease);
+}
+
+/* 自拍模式下快門外框變紫（與 SELFIE 標示呼應） */
+.shutter-ring.is-selfie {
+    border-color: rgba(167, 139, 250, 0.9);
+}
+
+.shutter-btn.is-selfie .shutter-core {
+    background: #a78bfa;
+}
+
+/* 自拍按鈕啟動狀態 */
+.mode-switch-btn.is-active {
+    color: #a78bfa;
+}
+
+/* ══════════════════════════════════════════════
    縮放列
 ══════════════════════════════════════════════ */
 .zoom-bar {

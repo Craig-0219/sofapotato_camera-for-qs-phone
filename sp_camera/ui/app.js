@@ -52,6 +52,7 @@ const State = {
     settingsOpen:   false,
     isCapturing:    false,
     isLive:         false,      // 相機 Live 模式（角色可移動 + 鼠標視角）
+    isSelfie:       false,      // 自拍模式（CreateCam 在角色前方）
     capturedUrl:    null,       // 截圖後待儲存的 URL
     sessionPhotos:  [],         // { url }
     config: {
@@ -77,6 +78,7 @@ const Dom = {
     vfProviderHint:     $('vf-provider-hint'),
     vfLiveHint:         $('vf-live-hint'),
     vfLiveBadge:        $('vf-live-badge'),
+    vfSelfieBadge:      $('vf-selfie-badge'),
     vfUploading:        $('vf-uploading'),
     vfShotBadge:        $('vf-shot-badge'),
     viewfinder:         document.getElementById('viewfinder'),
@@ -93,7 +95,8 @@ const Dom = {
     btnLastThumb:       $('btn-last-thumb'),
     lastThumbImg:       $('last-thumb-img'),
     thumbPlaceholder:   $('thumb-placeholder'),
-    btnToUrl:           $('btn-to-url'),
+    btnSelfie:          $('btn-selfie'),
+    selfieBtnLabel:     $('selfie-btn-label'),
     galleryStrip:       $('gallery-strip'),
     galleryStripInner:  $('gallery-strip-inner'),
     focusRing:          $('focus-ring'),
@@ -453,6 +456,38 @@ function handleCameraModeChange(data) {
 }
 
 // ═══════════════════════════════════════════════════════
+//  自拍模式切換 UI
+//  由 Lua ToggleSelfieMode() → SendNUIMessage({ action: 'selfieMode' }) 觸發
+//  或 NUI 自拍按鈕點擊（Live 模式下 NUI 無焦點，由 Lua F 鍵處理）
+// ═══════════════════════════════════════════════════════
+function handleSelfieModeChange(active) {
+    State.isSelfie = active;
+
+    if (active) {
+        // 觀景窗鏡像翻轉（CSS transform: scaleX(-1)）
+        Dom.viewfinder.classList.add('is-selfie');
+        Dom.shutterRing  && Dom.shutterRing.classList.add('is-selfie');
+        Dom.btnShutter.classList.add('is-selfie');
+
+        // SELFIE 標示
+        Dom.vfSelfieBadge.classList.remove('hidden');
+
+        // 自拍按鈕高亮
+        Dom.btnSelfie && Dom.btnSelfie.classList.add('is-active');
+        Dom.selfieBtnLabel && (Dom.selfieBtnLabel.textContent = '正拍');
+    } else {
+        Dom.viewfinder.classList.remove('is-selfie');
+        Dom.shutterRing  && Dom.shutterRing.classList.remove('is-selfie');
+        Dom.btnShutter.classList.remove('is-selfie');
+
+        Dom.vfSelfieBadge.classList.add('hidden');
+
+        Dom.btnSelfie && Dom.btnSelfie.classList.remove('is-active');
+        Dom.selfieBtnLabel && (Dom.selfieBtnLabel.textContent = '自拍');
+    }
+}
+
+// ═══════════════════════════════════════════════════════
 //  快門觸發（從 UI 按鈕按下 → 進入 Live 模式）
 //  Live 模式中的實際拍照由 Lua 的 E 鍵處理
 // ═══════════════════════════════════════════════════════
@@ -560,10 +595,23 @@ function bindEvents() {
         }
     });
 
-    // 切換到 URL 模式
-    Dom.btnToUrl.addEventListener('click', () => setView('url'));
+    // 自拍切換按鈕
+    // Live 模式下 NUI 無焦點，此按鈕無效；改用 F 鍵（Lua 處理）
+    // 非 Live 模式下預先送出 toggleSelfie 請求（進入 Live 後生效）
+    Dom.btnSelfie && Dom.btnSelfie.addEventListener('click', async () => {
+        if (State.isLive) {
+            // Live 模式：送出 toggleSelfie（實際 NUI 無焦點不會觸發，提示改用 F 鍵）
+            toast('info', '請按 F 鍵切換自拍', 2000);
+        } else {
+            // 非 Live 模式：送出 toggleSelfie（進入相機後生效）
+            await nuiFetch('toggleSelfie', {});
+        }
+    });
 
-    // 設定按鈕
+    // 切換到 URL 模式（移到頂部的 URL 按鈕）
+    $('btn-to-url') && $('btn-to-url').addEventListener('click', () => setView('url'));
+
+    // 設定按鈕（舊的 btn-to-url 綁定已移到上方，此處僅設定）
     Dom.btnSettings.addEventListener('click', openSettings);
 
     // 關閉（相機模式）
@@ -708,9 +756,17 @@ window.addEventListener('message', e => {
             break;
 
         // ── Live 相機模式切換 ──
-        // Lua EnterCameraMode() / ExitCameraMode() 後觸發
         case 'cameraMode':
             handleCameraModeChange(data);
+            // 退出 Live 模式時同步清除自拍狀態
+            if (!data.active && State.isSelfie) {
+                handleSelfieModeChange(false);
+            }
+            break;
+
+        // ── 自拍模式切換（Lua ToggleSelfieMode 後觸發） ──
+        case 'selfieMode':
+            handleSelfieModeChange(data.active);
             break;
 
         // ── 縮放更新（滾輪縮放時 Lua 觸發） ──

@@ -155,12 +155,19 @@ end)
 
 -- ──────────────────────────────────────────────
 --  NUI 回呼：退出相機模式（從 NUI 按鈕觸發）
---  通常由 Backspace 鍵在 Lua 迴圈中觸發
---  此 callback 作為額外出口（例如 NUI 按鈕）
 -- ──────────────────────────────────────────────
 RegisterNUICallback('exitCameraMode', function(data, cb)
     cb({ acknowledged = true })
     ExitCameraMode()
+end)
+
+-- ──────────────────────────────────────────────
+--  NUI 回呼：切換自拍 / 正拍
+--  同步 F 鍵行為，供 NUI 自拍按鈕呼叫
+-- ──────────────────────────────────────────────
+RegisterNUICallback('toggleSelfie', function(data, cb)
+    cb({ acknowledged = true })
+    ToggleSelfieMode()
 end)
 
 -- ──────────────────────────────────────────────
