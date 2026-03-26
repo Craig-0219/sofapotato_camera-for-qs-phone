@@ -1,79 +1,367 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-TW" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>sp_camera</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- qs-smartphone-pro 會把這個頁面載入為 iframe，嵌入手機畫面 -->
+<!--
+  qs-smartphone-pro 將此頁面載入為手機畫面內的 app iframe
+  設計尺寸：約 360×680px（依手機 UI 版本可能有差異）
+-->
+<div id="app">
 
-    <div id="app" class="app-container">
+    <!-- ░░░ Toast 通知容器 ░░░ -->
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
 
-        <!-- ── 頂部列 ────────────────────────────── -->
-        <div class="top-bar">
-            <span class="app-title">📷 Camera</span>
-            <button id="btn-close" class="btn-close" title="關閉">✕</button>
-        </div>
+    <!-- ░░░ 快門閃光效果 ░░░ -->
+    <div id="capture-flash" class="capture-flash" aria-hidden="true"></div>
 
-        <!-- ── 預覽區 ────────────────────────────── -->
-        <div class="preview-section">
-            <div id="preview-box" class="preview-box">
-                <div id="preview-placeholder" class="preview-placeholder">
-                    <span class="preview-icon">🖼️</span>
-                    <span class="preview-hint">輸入圖片 URL 後預覽</span>
-                </div>
-                <img id="preview-img" class="preview-img hidden" alt="預覽圖片">
+    <!-- ████████████████████████████████████████
+         VIEW: camera — 主相機模式
+    ████████████████████████████████████████ -->
+    <div id="view-camera" class="view view--camera active">
+
+        <!-- 頂部列 -->
+        <div class="topbar topbar--camera">
+            <div class="topbar-left">
+                <button id="btn-flash" class="icon-btn flash-btn" data-flash="off" title="閃光燈">
+                    <!-- Flash OFF SVG -->
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                        <line x1="3" y1="3" x2="21" y2="21" class="flash-off-line"/>
+                    </svg>
+                </button>
+                <button id="btn-timer" class="icon-btn timer-btn" data-timer="off" title="自拍定時器">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="13" r="8"/>
+                        <polyline points="12 9 12 13 14 15"/>
+                        <line x1="9" y1="2" x2="15" y2="2"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="topbar-center">
+                <span class="app-label">Camera</span>
+            </div>
+            <div class="topbar-right">
+                <button id="btn-settings" class="icon-btn" title="設定">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                    </svg>
+                </button>
+                <button id="btn-close-camera" class="icon-btn close-btn" title="關閉">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
             </div>
         </div>
 
-        <!-- ── 輸入區 ────────────────────────────── -->
-        <div class="input-section">
-            <label class="input-label">圖片 URL</label>
-            <div class="input-row">
+        <!-- 觀景窗 -->
+        <div id="viewfinder" class="viewfinder">
+            <!-- 3x3 構圖輔助線 -->
+            <div class="vf-grid" aria-hidden="true">
+                <div class="vf-line vf-line--v1"></div>
+                <div class="vf-line vf-line--v2"></div>
+                <div class="vf-line vf-line--h1"></div>
+                <div class="vf-line vf-line--h2"></div>
+            </div>
+            <!-- 對焦環（點擊觀景窗時出現） -->
+            <div id="focus-ring" class="focus-ring" aria-hidden="true"></div>
+            <!-- 觀景窗內容 -->
+            <div id="vf-idle" class="vf-idle">
+                <div class="vf-camera-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                        <circle cx="12" cy="13" r="4"/>
+                    </svg>
+                </div>
+                <p class="vf-hint">按下快門鍵拍攝</p>
+                <p class="vf-sub-hint" id="vf-provider-hint">截圖後將上傳至相簿</p>
+            </div>
+            <!-- 縮放指示標 -->
+            <div id="zoom-badge" class="zoom-badge">1.0×</div>
+        </div>
+
+        <!-- 縮放列 -->
+        <div class="zoom-bar">
+            <span class="zoom-min-label">1×</span>
+            <input type="range" id="zoom-slider" min="1" max="5" step="0.1" value="1" class="zoom-slider" aria-label="縮放">
+            <span class="zoom-max-label">5×</span>
+        </div>
+
+        <!-- Session 相簿列（拍攝至少一張後顯示） -->
+        <div id="gallery-strip" class="gallery-strip hidden">
+            <div id="gallery-strip-inner" class="gallery-strip-inner"></div>
+        </div>
+
+        <!-- 底部操作列 -->
+        <div class="bottombar bottombar--camera">
+            <!-- 左：最後一張縮圖 / 相簿入口 -->
+            <button id="btn-last-thumb" class="thumb-btn" title="查看最後一張">
+                <div id="thumb-placeholder" class="thumb-placeholder">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                </div>
+                <img id="last-thumb-img" class="thumb-img hidden" alt="最後一張">
+            </button>
+
+            <!-- 中：快門按鈕 -->
+            <button id="btn-shutter" class="shutter-btn" title="拍照">
+                <div class="shutter-ring">
+                    <div id="shutter-core" class="shutter-core"></div>
+                </div>
+            </button>
+
+            <!-- 右：切換 URL 模式 -->
+            <button id="btn-to-url" class="mode-switch-btn" title="URL 模式">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                </svg>
+                <span>URL</span>
+            </button>
+        </div>
+
+    </div><!-- /#view-camera -->
+
+
+    <!-- ████████████████████████████████████████
+         VIEW: url — 手動 URL 輸入模式
+    ████████████████████████████████████████ -->
+    <div id="view-url" class="view view--url">
+
+        <!-- 頂部列 -->
+        <div class="topbar topbar--url">
+            <button id="btn-back-to-camera" class="icon-btn back-btn" title="返回相機">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"/>
+                </svg>
+            </button>
+            <span class="app-label">🔗 URL 模式</span>
+            <button id="btn-close-url" class="icon-btn close-btn" title="關閉">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- 圖片預覽區 -->
+        <div class="url-preview-wrap">
+            <div id="url-ph" class="url-preview-placeholder">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="36" height="36">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <polyline points="21 15 16 10 5 21"/>
+                </svg>
+                <span>輸入 URL 後預覽圖片</span>
+            </div>
+            <img id="url-preview-img" class="url-preview-img hidden" alt="預覽圖">
+        </div>
+
+        <!-- URL 輸入 -->
+        <div class="url-form">
+            <label class="form-label">圖片 URL</label>
+            <div class="form-input-row">
                 <input
                     id="url-input"
-                    class="url-input"
-                    type="text"
-                    placeholder="https://i.imgur.com/xxxxxxx.jpg"
+                    class="form-input"
+                    type="url"
+                    placeholder="https://i.imgur.com/example.jpg"
                     autocomplete="off"
                     spellcheck="false"
+                    inputmode="url"
                 >
-                <button id="btn-preview" class="btn-preview" title="預覽">👁</button>
+                <button id="btn-url-preview" class="icon-btn-sm" title="預覽">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                </button>
             </div>
-        </div>
-
-        <!-- ── 操作按鈕 ────────────────────────────── -->
-        <div class="action-section">
-            <button id="btn-save" class="btn-save">
-                💾 儲存至手機相簿
+            <button id="btn-url-save" class="btn-primary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                    <polyline points="17 21 17 13 7 13 7 21"/>
+                    <polyline points="7 3 7 8 15 8"/>
+                </svg>
+                儲存至手機相簿
             </button>
         </div>
 
-        <!-- ── 狀態區 ────────────────────────────── -->
-        <div id="status-box" class="status-box hidden">
-            <span id="status-icon" class="status-icon"></span>
-            <span id="status-text" class="status-text"></span>
-        </div>
-
-        <!-- ── Payload 預覽（debug 用） ────────────── -->
+        <!-- Payload Debug 面板 -->
         <div class="debug-section">
-            <button id="btn-toggle-debug" class="btn-toggle-debug">
-                🔍 顯示 Payload
+            <button id="btn-debug-toggle" class="btn-debug-toggle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                Payload 預覽
+                <span id="debug-toggle-arrow">▼</span>
             </button>
             <div id="debug-panel" class="debug-panel hidden">
-                <div class="debug-label">最後一次發送的 Payload：</div>
                 <pre id="debug-payload" class="debug-payload">（尚未發送）</pre>
-                <div class="debug-note">
-                    ⚠ 以上欄位為推測格式，需以 qs-smartphone-pro
-                    savePhoto handler 原始碼校正
+                <div class="debug-warning">
+                    ⚠ 以上欄位為推測格式，需依 qs-smartphone-pro
+                    savePhoto handler 原始碼校正後才能視為正確
                 </div>
             </div>
         </div>
 
-    </div><!-- /#app -->
+    </div><!-- /#view-url -->
 
-    <script src="app.js"></script>
+
+    <!-- ████████████████████████████████████████
+         OVERLAY: 拍照結果 / 預覽
+    ████████████████████████████████████████ -->
+    <div id="result-overlay" class="result-overlay hidden">
+
+        <!-- 頂部操作列 -->
+        <div class="result-topbar">
+            <button id="btn-retake" class="result-action-btn retake-btn" title="重拍">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+                    <polyline points="1 4 1 10 7 10"/>
+                    <path d="M3.51 15a9 9 0 1 0 .49-3.45"/>
+                </svg>
+                重拍
+            </button>
+            <span class="result-title">預覽</span>
+            <button id="btn-copy-url" class="result-action-btn copy-btn" title="複製 URL">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- 圖片預覽 -->
+        <div class="result-img-wrap">
+            <img id="result-img" class="result-img" alt="拍攝結果">
+            <!-- 上傳中蒙版 -->
+            <div id="result-loading" class="result-loading hidden">
+                <div class="spinner"></div>
+                <span>上傳中...</span>
+            </div>
+            <!-- 上傳成功標記 -->
+            <div id="result-saved-badge" class="result-saved-badge hidden">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                已儲存
+            </div>
+        </div>
+
+        <!-- 底部操作 -->
+        <div class="result-bottombar">
+            <button id="btn-retake2" class="btn-secondary">🔄 重拍</button>
+            <button id="btn-result-save" class="btn-primary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                    <polyline points="17 21 17 13 7 13 7 21"/>
+                    <polyline points="7 3 7 8 15 8"/>
+                </svg>
+                儲存至手機相簿
+            </button>
+        </div>
+
+    </div><!-- /#result-overlay -->
+
+
+    <!-- ████████████████████████████████████████
+         BOTTOM SHEET: 設定面板
+    ████████████████████████████████████████ -->
+    <div id="settings-backdrop" class="sheet-backdrop hidden"></div>
+    <div id="settings-panel" class="bottom-sheet hidden">
+        <div class="sheet-handle" aria-hidden="true"></div>
+        <div class="sheet-header">
+            <span class="sheet-title">相機設定</span>
+            <button id="btn-settings-close" class="icon-btn close-btn" title="關閉設定">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+        <div class="sheet-body">
+
+            <!-- 上傳服務 -->
+            <div class="setting-row">
+                <label class="setting-label" for="setting-provider">上傳服務</label>
+                <select id="setting-provider" class="setting-select">
+                    <option value="fivemanage">Fivemanage</option>
+                    <option value="imgbb">imgbb（免費）</option>
+                    <option value="discord">Discord Webhook</option>
+                    <option value="custom">Custom API</option>
+                </select>
+            </div>
+
+            <!-- API Key 輸入（動態 label） -->
+            <div id="setting-key-row" class="setting-row">
+                <label class="setting-label" id="setting-key-label" for="setting-api-key">Fivemanage API Key</label>
+                <div class="form-input-row">
+                    <input id="setting-api-key" type="password" class="form-input" placeholder="輸入後按儲存…">
+                    <button id="btn-toggle-key-vis" class="icon-btn-sm" title="顯示/隱藏">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 截圖品質 -->
+            <div class="setting-row">
+                <label class="setting-label">截圖品質</label>
+                <div class="slider-row">
+                    <input type="range" id="setting-quality" class="setting-slider" min="50" max="100" step="5" value="92">
+                    <span id="quality-val" class="slider-val">92%</span>
+                </div>
+            </div>
+
+            <!-- 截圖格式 -->
+            <div class="setting-row">
+                <label class="setting-label" for="setting-encoding">截圖格式</label>
+                <select id="setting-encoding" class="setting-select setting-select--sm">
+                    <option value="jpg">JPG（推薦）</option>
+                    <option value="png">PNG（無損）</option>
+                    <option value="webp">WebP（最小）</option>
+                </select>
+            </div>
+
+            <!-- Debug 模式 -->
+            <div class="setting-row setting-row--toggle">
+                <label class="setting-label">Debug 模式</label>
+                <label class="toggle-wrap">
+                    <input type="checkbox" id="setting-debug" class="toggle-input">
+                    <span class="toggle-track">
+                        <span class="toggle-thumb"></span>
+                    </span>
+                </label>
+            </div>
+
+            <!-- 儲存按鈕 -->
+            <button id="btn-save-settings" class="btn-primary btn-settings-save">
+                儲存設定（本 session 有效）
+            </button>
+
+            <div class="setting-note">
+                ⚠ API Key 等設定僅在當前遊戲 session 有效。<br>
+                永久修改請編輯 <code>config.lua</code>。
+            </div>
+
+        </div>
+    </div><!-- /#settings-panel -->
+
+</div><!-- /#app -->
+
+<script src="app.js"></script>
 </body>
 </html>

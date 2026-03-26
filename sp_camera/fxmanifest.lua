@@ -1,30 +1,38 @@
 -- ============================================================
 --  sp_camera / fxmanifest.lua
 --  基於 quasar-store-organizations/custom-app-template 改造
---  整合目標：qs-smartphone-pro 自訂 App
 -- ============================================================
 
 fx_version 'cerulean'
 games { 'gta5' }
 
 name        'sp_camera'
-description 'Custom Camera App for qs-smartphone-pro'
-version     '1.0.0'
+description 'Complete Camera App for qs-smartphone-pro'
+version     '2.0.0'
 author      'sofapotato'
 
--- 客戶端 Lua
-client_script 'client/main.lua'
+-- 設定檔（共用）
+shared_script 'config.lua'
 
--- 伺服器端 Lua（僅做 debug log，實際儲存邏輯在 qs-smartphone-pro）
+-- 客戶端
+client_scripts {
+    'client/camera.lua',  -- 截圖 / 上傳核心邏輯
+    'client/main.lua',    -- App 註冊 / NUI 回呼 / 指令
+}
+
+-- 伺服器端（debug log）
 server_script 'server/main.lua'
 
--- NUI 頁面（手機內 app 的 UI，由 qs-smartphone-pro 載入為 iframe）
+-- NUI 頁面
 ui_page 'ui/index.html'
 
--- 把整個 ui/ 資料夾納入打包
+-- 打包 ui/ 所有檔案
 files {
     'ui/index.html',
     'ui/style.css',
     'ui/app.js',
-    'ui/icon.png',  -- TODO: 放一張實際 icon 圖（建議 96x96 PNG）
+    'ui/icon.png',
 }
+
+-- screenshot-basic 需在 server.cfg 中 ensure
+-- 建議順序：screenshot-basic → qs-smartphone-pro → sp_camera
